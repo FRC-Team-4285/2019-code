@@ -30,6 +30,7 @@ import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.ControlType;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANPIDController;
@@ -53,7 +54,10 @@ public class Robot extends IterativeRobot {
 
   Timer RobotTimer = new Timer();  
 
-//  DigitalInput limitswitch1 = new DigitalInput(1);
+  private CANPIDController Motor5PID;
+  public double P, I, D, IZ, FF, MAXO, MINO;
+
+  //DigitalInput limitswitch1 = new DigitalInput(0);
   
   VictorSPX SPX0 = new VictorSPX(0);
 
@@ -87,15 +91,35 @@ public class Robot extends IterativeRobot {
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
 
+    Motor5PID = Motor5.getPIDController();
+
+    P = 0.1;
+    I = 0;
+    D = 0;
+    IZ = 0;
+    FF = 0;
+    MAXO = 0.3;
+    MINO = -0.3;
+
+    Motor5PID.setP(P);
+    Motor5PID.setI(I);
+    Motor5PID.setD(D);
+    Motor5PID.setIZone(IZ);
+    Motor5PID.setFF(FF);
+    Motor5PID.setOutputRange(MINO, MAXO);
+
+    solenoid1.set(false);
+
     CameraServer.getInstance().startAutomaticCapture();
 
-    Motor0.setOpenLoopRampRate(0.5);
-    Motor1.setOpenLoopRampRate(0.5);
-    Motor2.setOpenLoopRampRate(0.5);
-    Motor3.setOpenLoopRampRate(0.5);
+    Motor0.setOpenLoopRampRate(1);
+    Motor1.setOpenLoopRampRate(1);
+    Motor2.setOpenLoopRampRate(1);
+    Motor3.setOpenLoopRampRate(1);
 
     Motor2.setInverted(true);
     Motor3.setInverted(true);
+    Motor7.setInverted(true);
   }
 
   /**
@@ -172,11 +196,6 @@ public class Robot extends IterativeRobot {
     boolean ArmAdown = stick2.getRawButtonPressed(2);
     boolean ArmAustop = stick2.getRawButtonReleased(6);
     boolean ArmAdstop = stick2.getRawButtonReleased(2);
-
-    boolean Liftu = stick2.getRawButtonPressed(8);
-    boolean Liftustop = stick2.getRawButtonReleased(8);
-    boolean Liftd = stick2.getRawButtonPressed(4);
-    boolean Liftdstop = stick2.getRawButtonReleased(4);
     
     if(Lattack.getRawAxis(1) > 0.1 || Lattack.getRawAxis(1) < -0.1) {
       Motor0.set(Lattack.getRawAxis(1));
@@ -226,19 +245,6 @@ public class Robot extends IterativeRobot {
     }
     if(Stepperin){
       doublesolenoid0.set(DoubleSolenoid.Value.kReverse);
-    }
-
-    if(Liftu){
-      Motor5.set(0.1);
-    }
-    if(Liftustop){
-      Motor5.set(0);
-    }
-    if(Liftd){
-      Motor5.set(-0.1);
-    }
-    if(Liftdstop){
-      Motor5.set(0);
     }
 
     if(IntakeRgo){
@@ -334,15 +340,15 @@ public class Robot extends IterativeRobot {
     boolean ArmAustop = stick2.getRawButtonReleased(6);
     boolean ArmAdstop = stick2.getRawButtonReleased(2);
 
-    boolean Liftu = stick2.getRawButtonPressed(8);
-    boolean Liftustop = stick2.getRawButtonReleased(8);
-    boolean Liftd = stick2.getRawButtonPressed(4);
-    boolean Liftdstop = stick2.getRawButtonReleased(4);
+    boolean P4 = stick2.getRawButton(4);
+    boolean P8 = stick2.getRawButton(8);
+    boolean P4stop = stick2.getRawButtonReleased(4);
+    boolean P8stop = stick2.getRawButtonReleased(8);
     
     
     if(Lattack.getRawAxis(1) > 0.1 || Lattack.getRawAxis(1) < -0.1) {
-      Motor0.set(Lattack.getRawAxis(1));
-      Motor1.set(Lattack.getRawAxis(1));
+      Motor0.set(Lattack.getRawAxis(1) * 0.95);
+      Motor1.set(Lattack.getRawAxis(1) * 0.95);
     }
     if(Lattack.getRawAxis(1) < 0.1 && Lattack.getRawAxis(1) > -0.1){
       Motor0.set(0);
@@ -357,19 +363,26 @@ public class Robot extends IterativeRobot {
       Motor3.set(0);
     }
 
-    if(Liftu){
-      Motor5.set(0.1);
+    if(P4){
+      Motor5PID.setReference(-102, ControlType.kPosition);
+      // Uncomment the following code so you can manually 
+      // lower the lift.
+      //  Motor5.set(-0.1);//Lift Turn down at a speed of -0.1.
     }
-    if(Liftustop){
+    if(P8){
+      Motor5PID.setReference(0, ControlType.kPosition);
+      // Uncomment the following code so you can manually 
+      // raise the lift.
+      //  Motor5.set(0.1);// Lift Turn up at a speed of 0.1.
+    }
+/*
+    if(P4stop){
       Motor5.set(0);
     }
-    if(Liftd){
-      Motor5.set(-0.1);
-    }
-    if(Liftdstop){
+    if(P8stop){
       Motor5.set(0);
     }
-
+*/
     if(Hatchout){
       solenoid1.set(true);
     }
@@ -450,11 +463,7 @@ public class Robot extends IterativeRobot {
     if(ArmAdstop){
       Motor6.set(0);
     }
-/*
-    if(limitswitch1.get()){
-      SRX1.set(ControlMode.PercentOutput, -1);
-    }
-*/    
+    
 /*
     if(climb){
       RobotTimer.start();

@@ -132,20 +132,20 @@ public double P, I, D, IZ, FF, MAXO, MINO;
     KMinOutput = -0.2;
 
     p = 0.1;
-    i = 1e-4;
-    d = 1;
+    i = 0;
+    d = 0;
     iz = 0;
     ff = 0;
     MaxO = 0.2;
     MinO = -0.2;
 
     P = 0.1;
-    I = 1e-4;
-    D = 1;
+    I = 0;
+    D = 0;
     IZ = 0;
     FF = 0;
-    MAXO = 0.2;
-    MINO = -0.2;
+    MAXO = 0.3;
+    MINO = -0.3;
 
 
     Motor4PID.setP(kP);
@@ -179,6 +179,7 @@ public double P, I, D, IZ, FF, MAXO, MINO;
 
     solenoid1.set(false);
 
+    CameraServer.getInstance().startAutomaticCapture();
     CameraServer.getInstance().startAutomaticCapture();
 
     Motor0.setOpenLoopRampRate(0.5);
@@ -385,7 +386,7 @@ public double P, I, D, IZ, FF, MAXO, MINO;
     encoder7.getPosition();
     encoder6.getPosition();
     encoder5.getPosition();
-    System.out.println(encoder5.getPosition());
+    System.out.println(encoder6.getPosition());
 
     boolean Hatchout = Rattack.getRawButtonPressed(2);
     boolean Hatchin = Rattack.getRawButtonReleased(2);
@@ -467,19 +468,34 @@ public double P, I, D, IZ, FF, MAXO, MINO;
     }
 
     if(P1){
-      Motor4PID.setReference(50, ControlType.kPosition);
-      Motor7PID.setReference(-5, ControlType.kPosition);
+      //Motor4PID.setReference(50, ControlType.kPosition);
+      Motor6PID.setReference(0, ControlType.kPosition);
+      //Motor7PID.setReference(-5, ControlType.kPosition);
     }
 
     if(P2){
-      Motor4PID.setReference(100, ControlType.kPosition);
-      Motor7PID.setReference(-10, ControlType.kPosition);
+      //Motor4PID.setReference(100, ControlType.kPosition);
+      Motor6PID.setReference(-100, ControlType.kPosition);
+      //Motor7PID.setReference(-10, ControlType.kPosition);
     }
 
     if(P3){
-      Motor4PID.setReference(0, ControlType.kPosition);
-      Motor7PID.setReference(0, ControlType.kPosition);
+      //Motor4PID.setReference(0, ControlType.kPosition);
+      //Motor7PID.setReference(0, ControlType.kPosition);
     }
+
+    if(P4) {
+      Motor5PID.setReference(-102, ControlType.kPosition);
+    }
+
+    if(P5) {
+      Motor5PID.setReference(-51, ControlType.kPosition);
+    }
+
+    if(P6) {
+      Motor5PID.setReference(0, ControlType.kPosition);
+    }
+
 /*
     if(limitswitch1.get()){
       SRX1.set(ControlMode.PercentOutput, -1);
