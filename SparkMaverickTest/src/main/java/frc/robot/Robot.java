@@ -111,6 +111,7 @@ public class Robot extends IterativeRobot {
     solenoid1.set(false);
 
     CameraServer.getInstance().startAutomaticCapture();
+    CameraServer.getInstance().startAutomaticCapture();
 
     Motor0.setOpenLoopRampRate(1);
     Motor1.setOpenLoopRampRate(1);
@@ -119,7 +120,6 @@ public class Robot extends IterativeRobot {
 
     Motor2.setInverted(true);
     Motor3.setInverted(true);
-    Motor7.setInverted(true);
   }
 
   /**
@@ -347,8 +347,8 @@ public class Robot extends IterativeRobot {
     
     
     if(Lattack.getRawAxis(1) > 0.1 || Lattack.getRawAxis(1) < -0.1) {
-      Motor0.set(Lattack.getRawAxis(1) * 0.95);
-      Motor1.set(Lattack.getRawAxis(1) * 0.95);
+      Motor0.set(Lattack.getRawAxis(1));
+      Motor1.set(Lattack.getRawAxis(1));
     }
     if(Lattack.getRawAxis(1) < 0.1 && Lattack.getRawAxis(1) > -0.1){
       Motor0.set(0);
@@ -364,25 +364,25 @@ public class Robot extends IterativeRobot {
     }
 
     if(P4){
-      Motor5PID.setReference(-102, ControlType.kPosition);
+       Motor5PID.setReference(-102, ControlType.kPosition);
       // Uncomment the following code so you can manually 
       // lower the lift.
-      //  Motor5.set(-0.1);//Lift Turn down at a speed of -0.1.
+      // Motor5.set(-0.1);//Lift Turn down at a speed of -0.1.
     }
     if(P8){
-      Motor5PID.setReference(0, ControlType.kPosition);
+       Motor5PID.setReference(0, ControlType.kPosition);
       // Uncomment the following code so you can manually 
       // raise the lift.
-      //  Motor5.set(0.1);// Lift Turn up at a speed of 0.1.
+      // Motor5.set(0.1);// Lift Turn up at a speed of 0.1.
     }
-/*
+    /*
     if(P4stop){
       Motor5.set(0);
     }
     if(P8stop){
       Motor5.set(0);
     }
-*/
+    */
     if(Hatchout){
       solenoid1.set(true);
     }

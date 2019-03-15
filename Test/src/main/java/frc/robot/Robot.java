@@ -176,7 +176,6 @@ public double P, I, D, IZ, FF, MAXO, MINO;
     Motor5PID.setFF(FF);
     Motor5PID.setOutputRange(MINO, MAXO);
 
-
     solenoid1.set(false);
 
     CameraServer.getInstance().startAutomaticCapture();
