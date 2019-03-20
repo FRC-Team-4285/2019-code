@@ -8,24 +8,15 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
+
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.CAN;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.CameraServer;
 
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 
@@ -35,13 +26,26 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANPIDController;
 
+/* mfwass: These are unused imports that Drew blew a cap about when I removed them.
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.CAN;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+*/
+
 /**
  * The VM is configured to automatically run this class, and to call the
- * functions corresponding to each mode, as described in the IterativeRobot
+ * functions comotor_right_rearesponding to each mode, as described in the IterativeRobot
  * documentation. If you change the name of this class or the package after
  * creating this project, you must also update the build.gradle file in the
  * project.
  */
+
 public class Robot extends IterativeRobot {
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
@@ -59,22 +63,22 @@ public class Robot extends IterativeRobot {
 
   //DigitalInput limitswitch1 = new DigitalInput(0);
   
-  VictorSPX SPX0 = new VictorSPX(0);
+    VictorSPX motor_intake = new VictorSPX(0); // Intake Motor - Used with cargo.
 
-  CANSparkMax Motor0 = new CANSparkMax(8, MotorType.kBrushless);
-  CANSparkMax Motor1 = new CANSparkMax(1, MotorType.kBrushless);
-  CANSparkMax Motor2 = new CANSparkMax(2, MotorType.kBrushless);
-  CANSparkMax Motor3 = new CANSparkMax(3, MotorType.kBrushless);
+    CANSparkMax motor_left_rear = new CANSparkMax(8, MotorType.kBrushless);   // Left Rear Motor
+    CANSparkMax motor_left_front = new CANSparkMax(1, MotorType.kBrushless);  // Left Front Motor
+    CANSparkMax motor_right_front = new CANSparkMax(2, MotorType.kBrushless); // Right Front Motor
+    CANSparkMax motor_right_rear = new CANSparkMax(3, MotorType.kBrushless);  // Right Rear Motor
 
-  CANSparkMax Motor4 = new CANSparkMax(4, MotorType.kBrushless);//Elevator Motor
-  CANSparkMax Motor5 = new CANSparkMax(5, MotorType.kBrushless);//Lift Motor
-  CANSparkMax Motor6 = new CANSparkMax(6, MotorType.kBrushless);//Arm Angle Motor
-  CANSparkMax Motor7 = new CANSparkMax(7, MotorType.kBrushless);//Box Angle Motor
+  CANSparkMax motor_elevator = new CANSparkMax(4, MotorType.kBrushless);  //Elevator Motor
+  CANSparkMax motor_lift = new CANSparkMax(5, MotorType.kBrushless);      //Lift Motor
+  CANSparkMax motor_arm_angle = new CANSparkMax(6, MotorType.kBrushless); //Arm Angle Motor
+  CANSparkMax motor_arm_box = new CANSparkMax(7, MotorType.kBrushless);   //Box Angle Motor
 
-  CANEncoder encoder4 = new CANEncoder(Motor4);//Elevator Encoder
-  CANEncoder encoder5 = new CANEncoder(Motor5);//Lift Encoder
-  CANEncoder encoder6 = new CANEncoder(Motor6);//Arm Angle Encoder
-  CANEncoder encoder7 = new CANEncoder(Motor7);//Box Angle Encoder
+  CANEncoder encoder_elevator = new CANEncoder(motor_elevator);   //Elevator Encoder
+  CANEncoder encoder_lift = new CANEncoder(motor_lift);           //Lift Encoder
+  CANEncoder encoder_arm_angle = new CANEncoder(motor_arm_angle); //Arm Angle Encoder
+  CANEncoder encoder_arm_box = new CANEncoder(motor_arm_box);     //Box Angle Encoder
 
   Solenoid solenoid1 = new Solenoid(2);//Hatch
 
@@ -91,7 +95,7 @@ public class Robot extends IterativeRobot {
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
 
-    Motor5PID = Motor5.getPIDController();
+    Motor5PID = motor_lift.getPIDController();
 
     P = 0.1;
     I = 0;
@@ -113,13 +117,13 @@ public class Robot extends IterativeRobot {
     CameraServer.getInstance().startAutomaticCapture();
     CameraServer.getInstance().startAutomaticCapture();
 
-    Motor0.setOpenLoopRampRate(1);
-    Motor1.setOpenLoopRampRate(1);
-    Motor2.setOpenLoopRampRate(1);
-    Motor3.setOpenLoopRampRate(1);
+    motor_left_rear.setOpenLoopRampRate(1);
+    motor_left_front.setOpenLoopRampRate(1);
+    motor_right_front.setOpenLoopRampRate(1);
+    motor_right_rear.setOpenLoopRampRate(1);
 
-    Motor2.setInverted(true);
-    Motor3.setInverted(true);
+    motor_right_front.setInverted(true);
+    motor_right_rear.setInverted(true);
   }
 
   /**
@@ -166,7 +170,7 @@ public class Robot extends IterativeRobot {
         break;
       case kDefaultAuto:
       default:
-      System.out.println(encoder4.getPosition());
+      System.out.println(encoder_elevator.getPosition());
 
     boolean Eustop = stick2.getRawButtonReleased(5);
     boolean Edstop = stick2.getRawButtonReleased(1);
@@ -198,20 +202,20 @@ public class Robot extends IterativeRobot {
     boolean ArmAdstop = stick2.getRawButtonReleased(2);
     
     if(Lattack.getRawAxis(1) > 0.1 || Lattack.getRawAxis(1) < -0.1) {
-      Motor0.set(Lattack.getRawAxis(1));
-      Motor1.set(Lattack.getRawAxis(1));
+      motor_left_rear.set(Lattack.getRawAxis(1));
+      motor_left_front.set(Lattack.getRawAxis(1));
     }
     if(Lattack.getRawAxis(1) < 0.1 && Lattack.getRawAxis(1) > -0.1){
-      Motor0.set(0);
-      Motor1.set(0);
+      motor_left_rear.set(0);
+      motor_left_front.set(0);
     }
     if(Rattack.getRawAxis(1) > 0.1 || Rattack.getRawAxis(1) < -0.1) {
-      Motor2.set(Rattack.getRawAxis(1));
-      Motor3.set(Rattack.getRawAxis(1));
+      motor_right_front.set(Rattack.getRawAxis(1));
+      motor_right_rear.set(Rattack.getRawAxis(1));
     }
     if(Rattack.getRawAxis(1) < 0.1 && Rattack.getRawAxis(1) > -0.1){
-      Motor2.set(0);
-      Motor3.set(0);
+      motor_right_front.set(0);
+      motor_right_rear.set(0);
     }
 
 
@@ -248,55 +252,55 @@ public class Robot extends IterativeRobot {
     }
 
     if(IntakeRgo){
-      SPX0.set(ControlMode.PercentOutput, 0.9);
+      motor_intake.set(ControlMode.PercentOutput, 0.9);
     }
     if(IntakeRstop){
-      SPX0.set(ControlMode.PercentOutput, 0);
+      motor_intake.set(ControlMode.PercentOutput, 0);
     }
     if(IntakeLgo){
-      SPX0.set(ControlMode.PercentOutput, -1);
+      motor_intake.set(ControlMode.PercentOutput, -1);
     }
     if(IntakeLstop){
-      SPX0.set(ControlMode.PercentOutput, 0);
+      motor_intake.set(ControlMode.PercentOutput, 0);
     }
 
     if(Eup){
-      Motor4.set(0.88);
+      motor_elevator.set(0.88);
     }
     if(Eustop){
-      Motor4.set(0);
+      motor_elevator.set(0);
     }
     if(Edown){
-      Motor4.set(-0.88);
+      motor_elevator.set(-0.88);
     }
     if(Edstop){
-      Motor4.set(0);
+      motor_elevator.set(0);
     }
 
     if(BoxAup){
-      Motor7.set(0.3);
+      motor_arm_box.set(0.3);
     }
     if(BoxAustop){
-      Motor7.set(0);
+      motor_arm_box.set(0);
     }
     if(BoxAdown){
-      Motor7.set(-0.3);
+      motor_arm_box.set(-0.3);
     }
     if(BoxAdstop){
-      Motor7.set(0);
+      motor_arm_box.set(0);
     }
 
     if(ArmAup){
-      Motor6.set(0.8);
+      motor_arm_angle.set(0.8);
     }
     if(ArmAustop){
-      Motor6.set(0);
+      motor_arm_angle.set(0);
     }
     if(ArmAdown){
-      Motor6.set(-0.7);
+      motor_arm_angle.set(-0.7);
     }
     if(ArmAdstop){
-      Motor6.set(0);
+      motor_arm_angle.set(0);
     }
         // Put default auto code here
         break;
@@ -309,7 +313,7 @@ public class Robot extends IterativeRobot {
    */
   @Override
   public void teleopPeriodic() {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-    System.out.println(encoder5.getPosition());
+    System.out.println(encoder_lift.getPosition());
 
     boolean Eustop = stick2.getRawButtonReleased(5);
     boolean Edstop = stick2.getRawButtonReleased(1);
@@ -347,40 +351,40 @@ public class Robot extends IterativeRobot {
     
     
     if(Lattack.getRawAxis(1) > 0.1 || Lattack.getRawAxis(1) < -0.1) {
-      Motor0.set(Lattack.getRawAxis(1));
-      Motor1.set(Lattack.getRawAxis(1));
+      motor_left_rear.set(Lattack.getRawAxis(1));
+      motor_left_front.set(Lattack.getRawAxis(1));
     }
     if(Lattack.getRawAxis(1) < 0.1 && Lattack.getRawAxis(1) > -0.1){
-      Motor0.set(0);
-      Motor1.set(0);
+      motor_left_rear.set(0);
+      motor_left_front.set(0);
     }
     if(Rattack.getRawAxis(1) > 0.1 || Rattack.getRawAxis(1) < -0.1) {
-      Motor2.set(Rattack.getRawAxis(1));
-      Motor3.set(Rattack.getRawAxis(1));
+      motor_right_front.set(Rattack.getRawAxis(1));
+      motor_right_rear.set(Rattack.getRawAxis(1));
     }
     if(Rattack.getRawAxis(1) < 0.1 && Rattack.getRawAxis(1) > -0.1){
-      Motor2.set(0);
-      Motor3.set(0);
+      motor_right_front.set(0);
+      motor_right_rear.set(0);
     }
 
     if(P4){
        Motor5PID.setReference(-102, ControlType.kPosition);
       // Uncomment the following code so you can manually 
       // lower the lift.
-      // Motor5.set(-0.2);//Lift Turn down at a speed of -0.1.
+      // motor_lift.set(-0.2);//Lift Turn down at a speed of -0.1.
     }
     if(P8){
        Motor5PID.setReference(0, ControlType.kPosition);
       // Uncomment the following code so you can manually 
       // raise the lift.
-      // Motor5.set(0.2);// Lift Turn up at a speed of 0.1.
+      // motor_lift.set(0.2);// Lift Turn up at a speed of 0.1.
     }
     /*
     if(P4stop){
-      Motor5.set(0);
+      motor_lift.set(0);
     }
     if(P8stop){
-      Motor5.set(0);
+      motor_lift.set(0);
     }
     */
     if(Hatchout){
@@ -412,56 +416,56 @@ public class Robot extends IterativeRobot {
     }
 
     if(IntakeRgo){
-      SPX0.set(ControlMode.PercentOutput, 0.9);
+      motor_intake.set(ControlMode.PercentOutput, 0.9);
     }
     if(IntakeRstop){
-      SPX0.set(ControlMode.PercentOutput, 0);
+      motor_intake.set(ControlMode.PercentOutput, 0);
     }
     if(IntakeLgo){
-      SPX0.set(ControlMode.PercentOutput, -1);
+      motor_intake.set(ControlMode.PercentOutput, -1);
     }
     if(IntakeLstop){
-      SPX0.set(ControlMode.PercentOutput, 0);
+      motor_intake.set(ControlMode.PercentOutput, 0);
     }
 
 
     if(Eup){
-      Motor4.set(0.88);
+      motor_elevator.set(0.88);
     }
     if(Eustop){
-      Motor4.set(0);
+      motor_elevator.set(0);
     }
     if(Edown){
-      Motor4.set(-0.88);
+      motor_elevator.set(-0.88);
     }
     if(Edstop){
-      Motor4.set(0);
+      motor_elevator.set(0);
     }
 
     if(BoxAup){
-      Motor7.set(-0.3);
+      motor_arm_box.set(-0.3);
     }
     if(BoxAustop){
-      Motor7.set(0);
+      motor_arm_box.set(0);
     }
     if(BoxAdown){
-      Motor7.set(0.3);
+      motor_arm_box.set(0.3);
     }
     if(BoxAdstop){
-      Motor7.set(0);
+      motor_arm_box.set(0);
     }
 
     if(ArmAup){
-      Motor6.set(0.8);
+      motor_arm_angle.set(0.8);
     }
     if(ArmAustop){
-      Motor6.set(0);
+      motor_arm_angle.set(0);
     }
     if(ArmAdown){
-      Motor6.set(-0.7);
+      motor_arm_angle.set(-0.7);
     }
     if(ArmAdstop){
-      Motor6.set(0);
+      motor_arm_angle.set(0);
     }
     
 /*
@@ -475,23 +479,23 @@ public class Robot extends IterativeRobot {
       }
       else if(RobotTimer.get() < 10 && RobotTimer.get() > 5){
         SRX1.set(ControlMode.PercentOutput, 0);
-        Motor7.set(0.5);
+        motor_arm_box.set(0.5);
       }
       else{
-        Motor7.set(0);
+        motor_arm_box.set(0);
       }
     }
   
 
     if(Eup){
-      if(encoder7.getPosition() < -9){
-      Motor7.set(0.1);
+      if(encoder_arm_box.getPosition() < -9){
+      motor_arm_box.set(0.1);
     }
-    else if (encoder4.getPosition() > 5){
-      Motor7.set(-0.1);
+    else if (encoder_elevator.getPosition() > 5){
+      motor_arm_box.set(-0.1);
     }
     else{
-      Motor7.set(0.0);
+      motor_arm_box.set(0.0);
       }
     }*/
   }
