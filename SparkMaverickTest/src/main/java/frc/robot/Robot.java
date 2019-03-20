@@ -206,8 +206,8 @@ public class Robot extends IterativeRobot {
       Motor1.set(0);
     }
     if(Rattack.getRawAxis(1) > 0.1 || Rattack.getRawAxis(1) < -0.1) {
-      Motor2.set(Lattack.getRawAxis(1));
-      Motor3.set(Lattack.getRawAxis(1));
+      Motor2.set(Rattack.getRawAxis(1));
+      Motor3.set(Rattack.getRawAxis(1));
     }
     if(Rattack.getRawAxis(1) < 0.1 && Rattack.getRawAxis(1) > -0.1){
       Motor2.set(0);
@@ -223,10 +223,10 @@ public class Robot extends IterativeRobot {
     }
 
     if(PLANBHout){
-      doublesolenoid1.set(DoubleSolenoid.Value.kReverse);
+      doublesolenoid1.set(DoubleSolenoid.Value.kForward);
     }
     if(PLANBHin){
-      doublesolenoid1.set(DoubleSolenoid.Value.kForward);
+      doublesolenoid1.set(DoubleSolenoid.Value.kReverse);
     }
     
 /*    if(PLANBHin){
@@ -308,7 +308,7 @@ public class Robot extends IterativeRobot {
    * This function is called periodically during operator control.
    */
   @Override
-  public void teleopPeriodic() {
+  public void teleopPeriodic() {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
     System.out.println(encoder5.getPosition());
 
     boolean Eustop = stick2.getRawButtonReleased(5);
@@ -367,13 +367,13 @@ public class Robot extends IterativeRobot {
        Motor5PID.setReference(-102, ControlType.kPosition);
       // Uncomment the following code so you can manually 
       // lower the lift.
-      // Motor5.set(-0.1);//Lift Turn down at a speed of -0.1.
+      // Motor5.set(-0.2);//Lift Turn down at a speed of -0.1.
     }
     if(P8){
        Motor5PID.setReference(0, ControlType.kPosition);
       // Uncomment the following code so you can manually 
       // raise the lift.
-      // Motor5.set(0.1);// Lift Turn up at a speed of 0.1.
+      // Motor5.set(0.2);// Lift Turn up at a speed of 0.1.
     }
     /*
     if(P4stop){
