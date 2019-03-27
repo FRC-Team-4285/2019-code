@@ -28,11 +28,11 @@ import com.revrobotics.CANPIDController;
 
 /* mfwass: These are unused imports that Drew blew a cap about when I removed them.
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.CAN;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
@@ -89,6 +89,7 @@ public class Robot extends IterativeRobot {
   DoubleSolenoid doublesolenoid0 = new DoubleSolenoid(1, 3);//Stepper
   DoubleSolenoid doublesolenoid1 = new DoubleSolenoid(4, 6);
   DoubleSolenoid doublesolenoid2 = new DoubleSolenoid(0, 7);
+
   /**
    * This function is run when the robot is first started up and should be
    * used for any initialization code.
