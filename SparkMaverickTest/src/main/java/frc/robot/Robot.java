@@ -90,6 +90,16 @@ public class Robot extends IterativeRobot {
   DoubleSolenoid doublesolenoid0 = new DoubleSolenoid(1, 3);//Stepper
   DoubleSolenoid doublesolenoid1 = new DoubleSolenoid(4, 6);
   DoubleSolenoid doublesolenoid2 = new DoubleSolenoid(0, 7);
+
+  NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+  NetworkTableEntry tx = table.getEntry("tx");
+  NetworkTableEntry ty = table.getEntry("ty");
+  NetworkTableEntry ta = table.getEntry("ta");
+
+  double x = tx.getDouble(0.0);
+  double y = ty.getDouble(0.0);
+  double area = ta.getDouble(0.0);
+
   /**
    * This function is run when the robot is first started up and should be
    * used for any initialization code.
@@ -163,6 +173,10 @@ public class Robot extends IterativeRobot {
 
     motor_right_front.setInverted(true);
     motor_right_rear.setInverted(true);
+
+    SmartDashboard.putNumber("LimelightX", x);
+    SmartDashboard.putNumber("LimelightY", y);
+    SmartDashboard.putNumber("LimelightArea", area);
   }
 
   /**
@@ -235,6 +249,7 @@ public class Robot extends IterativeRobot {
     boolean IntakeLgo = Lattack.getRawButtonPressed(1);
     boolean IntakeLstop = Lattack.getRawButtonReleased(1);
     
+    /*
     if(Lattack.getRawAxis(1) > 0.1 || Lattack.getRawAxis(1) < -0.1) 
     {
       motor_left_rear.set(Lattack.getRawAxis(1));
@@ -258,7 +273,77 @@ public class Robot extends IterativeRobot {
       motor_right_front.set(0);
       motor_right_rear.set(0);
     }
+    */
+    if(x < 2 && x > -2)
+    {
+      motor_right_rear.set(0.5);
+      motor_right_front.set(0.5);
+      motor_left_rear.set(0.5);
+      motor_left_front.set(0.5);
+    }
 
+    if(x > 2 && x < 5)
+    {
+      motor_right_rear.set(0.1);
+      motor_right_front.set(0.1);
+      motor_left_rear.set(0);
+      motor_left_front.set(0);
+    }
+    
+    if(x > 5 && x < 20)
+    {
+      motor_right_rear.set(0.5);
+      motor_right_front.set(0.5);
+      motor_left_rear.set(0);
+      motor_left_front.set(0);
+    }
+
+    if(x > 20)
+    {
+      motor_right_rear.set(1);
+      motor_right_front.set(1);
+      motor_left_rear.set(0);
+      motor_left_front.set(0);
+    }
+    if(x < -2 && x > -5)
+    {
+      motor_right_rear.set(0);
+      motor_right_front.set(0);
+      motor_left_rear.set(0.1);
+      motor_left_front.set(0);
+    }
+    
+    if(x < -5 && x > -20)
+    {
+      motor_right_rear.set(0);
+      motor_right_front.set(0);
+      motor_left_rear.set(0.5);
+      motor_left_front.set(0.5);
+    }
+
+    if(x < -20)
+    {
+      motor_right_rear.set(0);
+      motor_right_front.set(0);
+      motor_left_rear.set(1);
+      motor_left_front.set(1);
+    }
+
+    if(area > 50)
+    {
+      motor_right_rear.set(0);
+      motor_right_front.set(0);
+      motor_left_rear.set(0);
+      motor_left_front.set(0);
+    }
+
+    if(area == 0)
+    {
+      motor_right_rear.set(0);
+      motor_right_front.set(0);
+      motor_left_rear.set(0);
+      motor_left_front.set(0);
+    }
 
     if(Hatchout)
     {
@@ -359,7 +444,6 @@ public class Robot extends IterativeRobot {
     {
       motor_arm_box.set(0);
     }
-
         // Put default auto code here
         break;
         
