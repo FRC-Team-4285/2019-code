@@ -61,23 +61,27 @@ public class Robot extends IterativeRobot {
   private CANPIDController Motor5PID;
   public double P, I, D, IZ, FF, MAXO, MINO;
 
-  //DigitalInput limitswitch1 = new DigitalInput(0);
-  
-    VictorSPX motor_intake = new VictorSPX(0); // Intake Motor - Used with cargo.
+  private CANPIDController motor_elevator_PID;
+  public double kp, ki, kd, kiz, kff, kmax, kmin;
 
-    CANSparkMax motor_left_rear = new CANSparkMax(8, MotorType.kBrushless);   // Left Rear Motor
-    CANSparkMax motor_left_front = new CANSparkMax(1, MotorType.kBrushless);  // Left Front Motor
-    CANSparkMax motor_right_front = new CANSparkMax(2, MotorType.kBrushless); // Right Front Motor
-    CANSparkMax motor_right_rear = new CANSparkMax(3, MotorType.kBrushless);  // Right Rear Motor
+  private CANPIDController motor_arm_box_PID;
+  public double Kp, Ki, Kd, Kiz, Kff, Kmax, Kmin;
+
+  //DigitalInput limitswitch1 = new DigitalInput(0);
+
+  VictorSPX motor_intake = new VictorSPX(0); // Intake Motor - Used with cargo.
+
+  CANSparkMax motor_left_rear = new CANSparkMax(8, MotorType.kBrushless);   // Left Rear Motor
+  CANSparkMax motor_left_front = new CANSparkMax(1, MotorType.kBrushless);  // Left Front Motor
+  CANSparkMax motor_right_front = new CANSparkMax(2, MotorType.kBrushless); // Right Front Motor
+  CANSparkMax motor_right_rear = new CANSparkMax(3, MotorType.kBrushless);  // Right Rear Motor
 
   CANSparkMax motor_elevator = new CANSparkMax(4, MotorType.kBrushless);  //Elevator Motor
   CANSparkMax motor_lift = new CANSparkMax(5, MotorType.kBrushless);      //Lift Motor
-  CANSparkMax motor_arm_angle = new CANSparkMax(6, MotorType.kBrushless); //Arm Angle Motor
   CANSparkMax motor_arm_box = new CANSparkMax(7, MotorType.kBrushless);   //Box Angle Motor
 
   CANEncoder encoder_elevator = new CANEncoder(motor_elevator);   //Elevator Encoder
   CANEncoder encoder_lift = new CANEncoder(motor_lift);           //Lift Encoder
-  CANEncoder encoder_arm_angle = new CANEncoder(motor_arm_angle); //Arm Angle Encoder
   CANEncoder encoder_arm_box = new CANEncoder(motor_arm_box);     //Box Angle Encoder
 
   Solenoid solenoid1 = new Solenoid(2);//Hatch
@@ -111,6 +115,40 @@ public class Robot extends IterativeRobot {
     Motor5PID.setIZone(IZ);
     Motor5PID.setFF(FF);
     Motor5PID.setOutputRange(MINO, MAXO);
+
+    motor_elevator_PID = motor_elevator.getPIDController();
+
+    kp = 0.1;
+    ki = 0;
+    kd = 0;
+    kiz = 0;
+    kff = 0;
+    kmax = 1;
+    kmin = -1;
+
+    motor_elevator_PID.setP(kp);
+    motor_elevator_PID.setI(ki);
+    motor_elevator_PID.setD(kd);
+    motor_elevator_PID.setIZone(kiz);
+    motor_elevator_PID.setFF(kff);
+    motor_elevator_PID.setOutputRange(kmin, kmax);
+
+    motor_arm_box_PID = motor_arm_box.getPIDController();
+
+    Kp = 0.1;
+    Ki = 0;
+    Kd = 0;
+    Kiz = 0;
+    Kff = 0;
+    Kmax = 0.05;
+    Kmin = -0.05;
+
+    motor_arm_box_PID.setP(Kp);
+    motor_arm_box_PID.setI(Ki);
+    motor_arm_box_PID.setD(Kd);
+    motor_arm_box_PID.setIZone(Kiz);
+    motor_arm_box_PID.setFF(Kff);
+    motor_arm_box_PID.setOutputRange(Kmin, Kmax);
 
     solenoid1.set(false);
 
@@ -195,113 +233,132 @@ public class Robot extends IterativeRobot {
     boolean IntakeRstop = Rattack.getRawButtonReleased(1);
     boolean IntakeLgo = Lattack.getRawButtonPressed(1);
     boolean IntakeLstop = Lattack.getRawButtonReleased(1);
-
-    boolean ArmAup = stick2.getRawButtonPressed(6);
-    boolean ArmAdown = stick2.getRawButtonPressed(2);
-    boolean ArmAustop = stick2.getRawButtonReleased(6);
-    boolean ArmAdstop = stick2.getRawButtonReleased(2);
     
-    if(Lattack.getRawAxis(1) > 0.1 || Lattack.getRawAxis(1) < -0.1) {
+    if(Lattack.getRawAxis(1) > 0.1 || Lattack.getRawAxis(1) < -0.1) 
+    {
       motor_left_rear.set(Lattack.getRawAxis(1));
       motor_left_front.set(Lattack.getRawAxis(1));
     }
-    if(Lattack.getRawAxis(1) < 0.1 && Lattack.getRawAxis(1) > -0.1){
+
+    if(Lattack.getRawAxis(1) < 0.1 && Lattack.getRawAxis(1) > -0.1)
+    {
       motor_left_rear.set(0);
       motor_left_front.set(0);
     }
-    if(Rattack.getRawAxis(1) > 0.1 || Rattack.getRawAxis(1) < -0.1) {
+
+    if(Rattack.getRawAxis(1) > 0.1 || Rattack.getRawAxis(1) < -0.1) 
+    {
       motor_right_front.set(Rattack.getRawAxis(1));
       motor_right_rear.set(Rattack.getRawAxis(1));
     }
-    if(Rattack.getRawAxis(1) < 0.1 && Rattack.getRawAxis(1) > -0.1){
+
+    if(Rattack.getRawAxis(1) < 0.1 && Rattack.getRawAxis(1) > -0.1)
+    {
       motor_right_front.set(0);
       motor_right_rear.set(0);
     }
 
 
-    if(Hatchout){
+    if(Hatchout)
+    {
       solenoid1.set(true);
     }
-    if(Hatchin){
+
+    if(Hatchin)
+    {
       solenoid1.set(false);
     }
 
-    if(PLANBHout){
+    if(PLANBHout)
+    {
       doublesolenoid1.set(DoubleSolenoid.Value.kForward);
     }
-    if(PLANBHin){
+
+    if(PLANBHin)
+    {
       doublesolenoid1.set(DoubleSolenoid.Value.kReverse);
     }
     
-/*    if(PLANBHin){
-      doublesolenoid1.set(DoubleSolenoid.Value.kReverse);
-    }
-*/
-    if(PLANBout){
+    if(PLANBout)
+    {
       doublesolenoid2.set(DoubleSolenoid.Value.kForward);
     }
-    if(PLANBin){
+
+    if(PLANBin)
+    {
       doublesolenoid2.set(DoubleSolenoid.Value.kReverse);
     }
 
-    if(Stepperout){
+    if(Stepperout)
+    {
       doublesolenoid0.set(DoubleSolenoid.Value.kForward);
     }
-    if(Stepperin){
+
+    if(Stepperin)
+    {
       doublesolenoid0.set(DoubleSolenoid.Value.kReverse);
     }
 
-    if(IntakeRgo){
-      motor_intake.set(ControlMode.PercentOutput, 0.9);
+    if(IntakeRgo)
+    {
+      motor_intake.set(ControlMode.PercentOutput, 1);
     }
-    if(IntakeRstop){
+
+    if(IntakeRstop)
+    {
       motor_intake.set(ControlMode.PercentOutput, 0);
     }
-    if(IntakeLgo){
+
+    if(IntakeLgo)
+    {
       motor_intake.set(ControlMode.PercentOutput, -1);
     }
-    if(IntakeLstop){
+
+    if(IntakeLstop)
+    {
       motor_intake.set(ControlMode.PercentOutput, 0);
     }
 
-    if(Eup){
+    if(Eup)
+    {
       motor_elevator.set(0.88);
     }
-    if(Eustop){
+
+    if(Eustop)
+    {
       motor_elevator.set(0);
     }
-    if(Edown){
+
+    if(Edown)
+    {
       motor_elevator.set(-0.88);
     }
-    if(Edstop){
+
+    if(Edstop)
+    {
       motor_elevator.set(0);
     }
 
-    if(BoxAup){
-      motor_arm_box.set(0.3);
+    if(BoxAup)
+    {
+      motor_arm_box.set(0.05);
     }
-    if(BoxAustop){
-      motor_arm_box.set(0);
-    }
-    if(BoxAdown){
-      motor_arm_box.set(-0.3);
-    }
-    if(BoxAdstop){
+
+    if(BoxAustop)
+    {
       motor_arm_box.set(0);
     }
 
-    if(ArmAup){
-      motor_arm_angle.set(0.8);
+    if(BoxAdown)
+    {
+      motor_arm_box.set(-0.05);
     }
-    if(ArmAustop){
-      motor_arm_angle.set(0);
+
+    if(BoxAdstop)
+    {
+      motor_arm_box.set(0);
     }
-    if(ArmAdown){
-      motor_arm_angle.set(-0.7);
-    }
-    if(ArmAdstop){
-      motor_arm_angle.set(0);
-    }
+
         // Put default auto code here
         break;
         
@@ -313,7 +370,8 @@ public class Robot extends IterativeRobot {
    */
   @Override
   public void teleopPeriodic() {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-    System.out.println(encoder_lift.getPosition());
+    //System.out.println(encoder_lift.getPosition());
+    System.out.println(encoder_elevator.getPosition());
 
     boolean Eustop = stick2.getRawButtonReleased(5);
     boolean Edstop = stick2.getRawButtonReleased(1);
@@ -339,41 +397,49 @@ public class Robot extends IterativeRobot {
     boolean IntakeLgo = Lattack.getRawButtonPressed(1);
     boolean IntakeLstop = Lattack.getRawButtonReleased(1);
 
-    boolean ArmAup = stick2.getRawButtonPressed(6);
-    boolean ArmAdown = stick2.getRawButtonPressed(2);
-    boolean ArmAustop = stick2.getRawButtonReleased(6);
-    boolean ArmAdstop = stick2.getRawButtonReleased(2);
+    boolean Elevator_test_up = stick2.getRawButton(2);
+    boolean Elevator_test_down = stick2.getRawButton(6);
 
     boolean P4 = stick2.getRawButton(4);
     boolean P8 = stick2.getRawButton(8);
     boolean P4stop = stick2.getRawButtonReleased(4);
     boolean P8stop = stick2.getRawButtonReleased(8);
     
-    
-    if(Lattack.getRawAxis(1) > 0.1 || Lattack.getRawAxis(1) < -0.1) {
+   /* 
+    if(Lattack.getRawAxis(1) > 0.1 || Lattack.getRawAxis(1) < -0.1) 
+    {
       motor_left_rear.set(Lattack.getRawAxis(1));
       motor_left_front.set(Lattack.getRawAxis(1));
     }
-    if(Lattack.getRawAxis(1) < 0.1 && Lattack.getRawAxis(1) > -0.1){
+
+    if(Lattack.getRawAxis(1) < 0.1 && Lattack.getRawAxis(1) > -0.1)
+    {
       motor_left_rear.set(0);
       motor_left_front.set(0);
     }
-    if(Rattack.getRawAxis(1) > 0.1 || Rattack.getRawAxis(1) < -0.1) {
+
+    if(Rattack.getRawAxis(1) > 0.1 || Rattack.getRawAxis(1) < -0.1) 
+    {
       motor_right_front.set(Rattack.getRawAxis(1));
       motor_right_rear.set(Rattack.getRawAxis(1));
     }
-    if(Rattack.getRawAxis(1) < 0.1 && Rattack.getRawAxis(1) > -0.1){
+
+    if(Rattack.getRawAxis(1) < 0.1 && Rattack.getRawAxis(1) > -0.1)
+    {
       motor_right_front.set(0);
       motor_right_rear.set(0);
     }
-
-    if(P4){
+    */
+    if(P4)
+    {
        Motor5PID.setReference(-102, ControlType.kPosition);
       // Uncomment the following code so you can manually 
       // lower the lift.
       // motor_lift.set(-0.2);//Lift Turn down at a speed of -0.1.
     }
-    if(P8){
+
+    if(P8)
+    {
        Motor5PID.setReference(0, ControlType.kPosition);
       // Uncomment the following code so you can manually 
       // raise the lift.
@@ -387,97 +453,129 @@ public class Robot extends IterativeRobot {
       motor_lift.set(0);
     }
     */
-    if(Hatchout){
+    if (Elevator_test_up)
+    {
+      motor_elevator_PID.setReference(0, ControlType.kPosition);
+    }
+    
+    if (Elevator_test_down)
+    {
+      motor_elevator_PID.setReference(350, ControlType.kPosition);
+    }
+
+    if(Hatchout)
+    {
       solenoid1.set(true);
     }
-    if(Hatchin){
+   
+    if(Hatchin)
+    {
       solenoid1.set(false);
     }
 
-    if(PLANBHout){
+    if(PLANBHout)
+    {
       doublesolenoid1.set(DoubleSolenoid.Value.kForward);
     }
-    if(PLANBHin){
+    
+    if(PLANBHin)
+    {
       doublesolenoid1.set(DoubleSolenoid.Value.kReverse);
     }
 
-    if(PLANBout){
+    if(PLANBout)
+    {
       doublesolenoid2.set(DoubleSolenoid.Value.kForward);
     }
-    if(PLANBin){
+
+    if(PLANBin)
+    {
       doublesolenoid2.set(DoubleSolenoid.Value.kReverse);
     }
 
-    if(Stepperout){
+    if(Stepperout)
+    {
       doublesolenoid0.set(DoubleSolenoid.Value.kForward);
     }
-    if(Stepperin){
+
+    if(Stepperin)
+    {
       doublesolenoid0.set(DoubleSolenoid.Value.kReverse);
     }
 
-    if(IntakeRgo){
-      motor_intake.set(ControlMode.PercentOutput, 0.9);
+    if(IntakeRgo)
+    {
+      motor_intake.set(ControlMode.PercentOutput, 1);
     }
-    if(IntakeRstop){
+
+    if(IntakeRstop)
+    {
       motor_intake.set(ControlMode.PercentOutput, 0);
     }
-    if(IntakeLgo){
+
+    if(IntakeLgo)
+    {
       motor_intake.set(ControlMode.PercentOutput, -1);
     }
-    if(IntakeLstop){
+    
+    if(IntakeLstop)
+    {
       motor_intake.set(ControlMode.PercentOutput, 0);
     }
 
-
-    if(Eup){
+    if(Eup)
+    {
       motor_elevator.set(0.88);
     }
-    if(Eustop){
+
+    if(Eustop)
+    {
       motor_elevator.set(0);
     }
-    if(Edown){
+
+    if(Edown)
+    {
       motor_elevator.set(-0.88);
     }
-    if(Edstop){
+
+    if(Edstop)
+    {
       motor_elevator.set(0);
     }
 
-    if(BoxAup){
-      motor_arm_box.set(-0.3);
+    if(BoxAup)
+    {
+      motor_arm_box.set(0.1);
     }
-    if(BoxAustop){
-      motor_arm_box.set(0);
-    }
-    if(BoxAdown){
-      motor_arm_box.set(0.3);
-    }
-    if(BoxAdstop){
+
+    if(BoxAustop)
+    {
       motor_arm_box.set(0);
     }
 
-    if(ArmAup){
-      motor_arm_angle.set(0.8);
+    if(BoxAdown)
+    {
+      motor_arm_box.set(-0.1);
     }
-    if(ArmAustop){
-      motor_arm_angle.set(0);
-    }
-    if(ArmAdown){
-      motor_arm_angle.set(-0.7);
-    }
-    if(ArmAdstop){
-      motor_arm_angle.set(0);
+
+    if(BoxAdstop)
+    {
+      motor_arm_box.set(0);
     }
     
 /*
-    if(climb){
+    if(climb)
+    {
       RobotTimer.start();
       if(RobotTimer.get() < .25){
       solenoid2.set(true);
-      }
-      else if(RobotTimer.get() > .25 && RobotTimer.get() < 5){
+     }
+      else if(RobotTimer.get() > .25 && RobotTimer.get() < 5)
+      {
         SRX1.set(ControlMode.PercentOutput, 0.5);
       }
-      else if(RobotTimer.get() < 10 && RobotTimer.get() > 5){
+      else if(RobotTimer.get() < 10 && RobotTimer.get() > 5)
+      {
         SRX1.set(ControlMode.PercentOutput, 0);
         motor_arm_box.set(0.5);
       }
@@ -487,16 +585,19 @@ public class Robot extends IterativeRobot {
     }
   
 
-    if(Eup){
+    if(Eup)
+    {
       if(encoder_arm_box.getPosition() < -9){
       motor_arm_box.set(0.1);
     }
-    else if (encoder_elevator.getPosition() > 5){
+    else if (encoder_elevator.getPosition() > 5)
+    {
       motor_arm_box.set(-0.1);
     }
-    else{
+    else
+    {
       motor_arm_box.set(0.0);
-      }
+    }
     }*/
   }
   /**
