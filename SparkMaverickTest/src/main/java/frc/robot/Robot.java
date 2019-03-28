@@ -140,8 +140,8 @@ public class Robot extends IterativeRobot {
     Kd = 0;
     Kiz = 0;
     Kff = 0;
-    Kmax = 0.05;
-    Kmin = -0.05;
+    Kmax = 0.2;
+    Kmin = -0.15;
 
     motor_arm_box_PID.setP(Kp);
     motor_arm_box_PID.setI(Ki);
@@ -405,7 +405,7 @@ public class Robot extends IterativeRobot {
     boolean P4stop = stick2.getRawButtonReleased(4);
     boolean P8stop = stick2.getRawButtonReleased(8);
     
-   /* 
+    
     if(Lattack.getRawAxis(1) > 0.1 || Lattack.getRawAxis(1) < -0.1) 
     {
       motor_left_rear.set(Lattack.getRawAxis(1));
@@ -429,7 +429,7 @@ public class Robot extends IterativeRobot {
       motor_right_front.set(0);
       motor_right_rear.set(0);
     }
-    */
+    
     if(P4)
     {
        Motor5PID.setReference(-102, ControlType.kPosition);
@@ -456,11 +456,13 @@ public class Robot extends IterativeRobot {
     if (Elevator_test_up)
     {
       motor_elevator_PID.setReference(0, ControlType.kPosition);
+      motor_arm_box_PID.setReference(-12.5, ControlType.kPosition);
     }
     
     if (Elevator_test_down)
     {
       motor_elevator_PID.setReference(350, ControlType.kPosition);
+      motor_arm_box_PID.setReference(-3.2, ControlType.kPosition);
     }
 
     if(Hatchout)
@@ -525,39 +527,45 @@ public class Robot extends IterativeRobot {
 
     if(Eup)
     {
-      motor_elevator.set(0.88);
+      motor_elevator_PID.setReference(595, ControlType.kPosition);
+      motor_arm_box_PID.setReference(-0.75, ControlType.kPosition);
+      //motor_elevator.set(0.88);
     }
-
+/*
     if(Eustop)
     {
       motor_elevator.set(0);
     }
-
+*/
     if(Edown)
     {
-      motor_elevator.set(-0.88);
+      motor_elevator_PID.setReference(520, ControlType.kPosition);
+      motor_arm_box_PID.setReference(-4.2, ControlType.kPosition);
     }
-
+/*
     if(Edstop)
     {
       motor_elevator.set(0);
     }
-
+*/
     if(BoxAup)
     {
-      motor_arm_box.set(0.1);
+      motor_arm_box_PID.setReference(-0.75, ControlType.kPosition);
+      motor_elevator_PID.setReference(0, ControlType.kPosition);
+      //motor_arm_box.set(0.1);
     }
-
+/*
     if(BoxAustop)
     {
       motor_arm_box.set(0);
     }
-
+*/
     if(BoxAdown)
     {
-      motor_arm_box.set(-0.1);
+      motor_arm_box_PID.setReference(-14, ControlType.kPosition);
+      //motor_arm_box.set(-0.1);
     }
-
+/*
     if(BoxAdstop)
     {
       motor_arm_box.set(0);
