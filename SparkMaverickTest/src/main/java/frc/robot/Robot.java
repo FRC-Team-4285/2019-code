@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.CameraServer;
+import edu.wpi.first.wpilibj.AnalogInput;
 
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.ctre.phoenix.motorcontrol.ControlMode;
@@ -58,6 +59,8 @@ public class Robot extends IterativeRobot {
 
   Timer RobotTimer = new Timer();  
 
+  int piston_repeat;
+
   private CANPIDController Motor5PID;
   public double P, I, D, IZ, FF, MAXO, MINO;
 
@@ -89,6 +92,7 @@ public class Robot extends IterativeRobot {
   DoubleSolenoid doublesolenoid0 = new DoubleSolenoid(1, 3);//Stepper
   DoubleSolenoid doublesolenoid1 = new DoubleSolenoid(4, 6);
   DoubleSolenoid doublesolenoid2 = new DoubleSolenoid(0, 7);
+  //DoubleSolenoid suction_cup = new DoubleSolenoid(2, 5);
   /**
    * This function is run when the robot is first started up and should be
    * used for any initialization code.
@@ -566,7 +570,24 @@ public class Robot extends IterativeRobot {
       //motor_arm_box.set(-0.1);
     }
 /*
-    if(BoxAdstop)
+    if(stick2.getRawAxis(1) > 0.9)
+    {
+      for (piston_repeat = 0; piston_repeat < 4; piston_repeat++)
+      {
+        RobotTimer.start();
+        if (RobotTimer.get() < 0.5)
+        {
+          suction_cup.set(DoubleSolenoid.Value.kForward);
+        }
+        if (RobotTimer.get() > 0.5)
+        {
+          suction_cup.set(DoubleSolenoid.Value.kReverse);
+        }
+        RobotTimer.reset();
+      }
+    }
+/*
+   if(BoxAdstop)
     {
       motor_arm_box.set(0);
     }
@@ -582,6 +603,8 @@ public class Robot extends IterativeRobot {
       {
         SRX1.set(ControlMode.PercentOutput, 0.5);
       }
+
+
       else if(RobotTimer.get() < 10 && RobotTimer.get() > 5)
       {
         SRX1.set(ControlMode.PercentOutput, 0);
