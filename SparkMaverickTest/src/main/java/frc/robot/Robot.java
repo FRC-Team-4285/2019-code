@@ -12,13 +12,16 @@ import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.AnalogInput;
 
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
+
+import java.util.TimerTask;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 
 import com.revrobotics.CANSparkMax;
@@ -57,9 +60,11 @@ public class Robot extends IterativeRobot {
   Joystick Lattack = new Joystick(2);
   Joystick stick2 = new Joystick(4);
 
-  Timer RobotTimer = new Timer();  
+  Timer RobotTimer = new Timer(); 
+  Timer Suction_cup_timer = new Timer(); 
 
   int piston_repeat;
+  int Stepper_variable = 0;
 
   private CANPIDController Motor5PID;
   public double P, I, D, IZ, FF, MAXO, MINO;
@@ -70,6 +75,9 @@ public class Robot extends IterativeRobot {
   private CANPIDController motor_arm_box_PID;
   public double Kp, Ki, Kd, Kiz, Kff, Kmax, Kmin;
 
+  private CANPIDController suction_cup_lift_PID;
+  public double kP, kI, kD, kMAX, kMIN;
+
   //DigitalInput limitswitch1 = new DigitalInput(0);
 
   VictorSPX motor_intake = new VictorSPX(0); // Intake Motor - Used with cargo.
@@ -79,20 +87,23 @@ public class Robot extends IterativeRobot {
   CANSparkMax motor_right_front = new CANSparkMax(2, MotorType.kBrushless); // Right Front Motor
   CANSparkMax motor_right_rear = new CANSparkMax(3, MotorType.kBrushless);  // Right Rear Motor
 
-  CANSparkMax motor_elevator = new CANSparkMax(4, MotorType.kBrushless);  //Elevator Motor
-  CANSparkMax motor_lift = new CANSparkMax(5, MotorType.kBrushless);      //Lift Motor
+  CANSparkMax motor_elevator = new CANSparkMax(4, MotorType.kBrushless);  // Elevator Motor
+  CANSparkMax motor_lift = new CANSparkMax(5, MotorType.kBrushless);      // Lift Motor
+  //CANSparkMax motor_suction_lift = new CANSparkMax(6, MotorType.kBrushless); // Suction cup Motor
   CANSparkMax motor_arm_box = new CANSparkMax(7, MotorType.kBrushless);   //Box Angle Motor
 
-  CANEncoder encoder_elevator = new CANEncoder(motor_elevator);   //Elevator Encoder
-  CANEncoder encoder_lift = new CANEncoder(motor_lift);           //Lift Encoder
-  CANEncoder encoder_arm_box = new CANEncoder(motor_arm_box);     //Box Angle Encoder
+  CANEncoder encoder_elevator = new CANEncoder(motor_elevator);   // Elevator Encoder
+  CANEncoder encoder_lift = new CANEncoder(motor_lift);           // Lift Encoder
+  CANEncoder encoder_arm_box = new CANEncoder(motor_arm_box);     // Box Angle Encoder
+  //CANEncoder encoder_suction_lift = new CANEncoder(motor_suction_lift); //Suction Cup Encodet
 
-  Solenoid solenoid1 = new Solenoid(2);//Hatch
+  //Solenoid solenoid1 = new Solenoid(2);
 
-  DoubleSolenoid doublesolenoid0 = new DoubleSolenoid(1, 3);//Stepper
-  DoubleSolenoid doublesolenoid1 = new DoubleSolenoid(4, 6);
-  DoubleSolenoid doublesolenoid2 = new DoubleSolenoid(0, 7);
-  //DoubleSolenoid suction_cup = new DoubleSolenoid(2, 5);
+  DoubleSolenoid doublesolenoid0 = new DoubleSolenoid(1, 3);// Stepper
+  //DoubleSolenoid doublesolenoid1 = new DoubleSolenoid(4, 6);
+  //DoubleSolenoid doublesolenoid2 = new DoubleSolenoid(0, 7);
+  //DoubleSolenoid suction_cup = new DoubleSolenoid(1, 3); // Suction cup
+  //DoubleSolenoid stabilizer = new DoubleSolenoid(2, 5); //Stabilizer, u idiot
   /**
    * This function is run when the robot is first started up and should be
    * used for any initialization code.
@@ -110,8 +121,8 @@ public class Robot extends IterativeRobot {
     D = 0;
     IZ = 0;
     FF = 0;
-    MAXO = 0.3;
-    MINO = -0.3;
+    MAXO = 0.6;
+    MINO = -0.6;
 
     Motor5PID.setP(P);
     Motor5PID.setI(I);
@@ -127,8 +138,8 @@ public class Robot extends IterativeRobot {
     kd = 0;
     kiz = 0;
     kff = 0;
-    kmax = 1;
-    kmin = -1;
+    kmax = 0.7;
+    kmin = -0.7;
 
     motor_elevator_PID.setP(kp);
     motor_elevator_PID.setI(ki);
@@ -153,16 +164,30 @@ public class Robot extends IterativeRobot {
     motor_arm_box_PID.setIZone(Kiz);
     motor_arm_box_PID.setFF(Kff);
     motor_arm_box_PID.setOutputRange(Kmin, Kmax);
+    
+    /*
+    suction_cup_lift_PID = motor_suction_lift.getPIDController();
 
-    solenoid1.set(false);
+    kP = 0.1;
+    kD = 0;
+    kI = 0;
+    kMAX = 0.15;
+    kMIN = -0.15;
+
+    suction_cup_lift_PID.setP(kP);
+    suction_cup_lift_PID.setD(kD);
+    suction_cup_lift_PID.setI(kI);
+    suction_cup_lift_PID.setOutputRange(kMIN, kMAX);
+    */
+    //solenoid1.set(false);
 
     CameraServer.getInstance().startAutomaticCapture();
     CameraServer.getInstance().startAutomaticCapture();
 
-    motor_left_rear.setOpenLoopRampRate(1);
-    motor_left_front.setOpenLoopRampRate(1);
-    motor_right_front.setOpenLoopRampRate(1);
-    motor_right_rear.setOpenLoopRampRate(1);
+    motor_left_rear.setOpenLoopRampRate(0.3);
+    motor_left_front.setOpenLoopRampRate(0.3);
+    motor_right_front.setOpenLoopRampRate(0.3);
+    motor_right_rear.setOpenLoopRampRate(0.3);
 
     motor_right_front.setInverted(true);
     motor_right_rear.setInverted(true);
@@ -214,155 +239,169 @@ public class Robot extends IterativeRobot {
       default:
       System.out.println(encoder_elevator.getPosition());
 
-    boolean Eustop = stick2.getRawButtonReleased(5);
-    boolean Edstop = stick2.getRawButtonReleased(1);
-    boolean Eup = stick2.getRawButtonPressed(5);
-    boolean Edown = stick2.getRawButtonPressed(1);
-
-    boolean BoxAdown = stick2.getRawButtonPressed(3);
-    boolean BoxAup = stick2.getRawButtonPressed(7);
-    boolean BoxAustop = stick2.getRawButtonReleased(7);
-    boolean BoxAdstop = stick2.getRawButtonReleased(3);
-
-    boolean Hatchout = Rattack.getRawButtonPressed(2);
-    boolean Hatchin = Rattack.getRawButtonReleased(2);
-    boolean Stepperout = Rattack.getRawButton(5);
-    boolean Stepperin = Lattack.getRawButton(4);
-    boolean PLANBout = Rattack.getRawButtonPressed(3);
-    boolean PLANBin = Rattack.getRawButtonReleased(3);
-    boolean PLANBHout = Lattack.getRawButtonPressed(3);
-    boolean PLANBHin = Lattack.getRawButtonReleased(3);
-
-    boolean IntakeRgo = Rattack.getRawButtonPressed(1);
-    boolean IntakeRstop = Rattack.getRawButtonReleased(1);
-    boolean IntakeLgo = Lattack.getRawButtonPressed(1);
-    boolean IntakeLstop = Lattack.getRawButtonReleased(1);
+      boolean Eustop = stick2.getRawButtonReleased(5);
+      boolean Edstop = stick2.getRawButtonReleased(1);
+      boolean Rocket_level_2 = stick2.getRawButtonPressed(5);
+      boolean Cargo_ship = stick2.getRawButtonPressed(1);
+  
+      boolean Ball_intake_arm = stick2.getRawButtonPressed(3);
+      boolean Starting_config = stick2.getRawButtonPressed(7);
+      boolean BoxAustop = stick2.getRawButtonReleased(7);
+      boolean BoxAdstop = stick2.getRawButtonReleased(3);
+  
+      boolean Stepperout = Rattack.getRawButton(5);
+      boolean Stepperin = Lattack.getRawButton(4);
+      boolean PLANBout = Rattack.getRawButtonPressed(3);
+      boolean PLANBin = Rattack.getRawButtonReleased(3);
+      boolean PLANBHout = Lattack.getRawButtonPressed(3);
+      boolean PLANBHin = Lattack.getRawButtonReleased(3);
+  
+      boolean IntakeRgo = Rattack.getRawButtonPressed(1);
+      boolean IntakeRstop = Rattack.getRawButtonReleased(1);
+      boolean IntakeLgo = Lattack.getRawButtonPressed(1);
+      boolean IntakeLstop = Lattack.getRawButtonReleased(1);
+  
+      boolean Ball_capture = stick2.getRawButton(2);
+      boolean Feeder_Station = stick2.getRawButton(6);
     
-    if(Lattack.getRawAxis(1) > 0.1 || Lattack.getRawAxis(1) < -0.1) 
+      if(Lattack.getRawAxis(1) > 0.1 || Lattack.getRawAxis(1) < -0.1) 
+      {
+        motor_left_rear.set(Lattack.getRawAxis(1));
+        motor_left_front.set(Lattack.getRawAxis(1));
+      }
+  
+      if(Lattack.getRawAxis(1) < 0.1 && Lattack.getRawAxis(1) > -0.1)
+      {
+        motor_left_rear.set(0);
+        motor_left_front.set(0);
+      }
+  
+      if(Rattack.getRawAxis(1) > 0.1 || Rattack.getRawAxis(1) < -0.1) 
+      { 
+        motor_right_front.set(Rattack.getRawAxis(1));
+        motor_right_rear.set(Rattack.getRawAxis(1));
+      }
+  
+      if(Rattack.getRawAxis(1) < 0.1 && Rattack.getRawAxis(1) > -0.1)
+      {
+        motor_right_front.set(0);
+        motor_right_rear.set(0);
+      }
+      
+      if (Ball_capture)
     {
-      motor_left_rear.set(Lattack.getRawAxis(1));
-      motor_left_front.set(Lattack.getRawAxis(1));
-    }
-
-    if(Lattack.getRawAxis(1) < 0.1 && Lattack.getRawAxis(1) > -0.1)
-    {
-      motor_left_rear.set(0);
-      motor_left_front.set(0);
-    }
-
-    if(Rattack.getRawAxis(1) > 0.1 || Rattack.getRawAxis(1) < -0.1) 
-    {
-      motor_right_front.set(Rattack.getRawAxis(1));
-      motor_right_rear.set(Rattack.getRawAxis(1));
-    }
-
-    if(Rattack.getRawAxis(1) < 0.1 && Rattack.getRawAxis(1) > -0.1)
-    {
-      motor_right_front.set(0);
-      motor_right_rear.set(0);
-    }
-
-
-    if(Hatchout)
-    {
-      solenoid1.set(true);
-    }
-
-    if(Hatchin)
-    {
-      solenoid1.set(false);
-    }
-
-    if(PLANBHout)
-    {
-      doublesolenoid1.set(DoubleSolenoid.Value.kForward);
-    }
-
-    if(PLANBHin)
-    {
-      doublesolenoid1.set(DoubleSolenoid.Value.kReverse);
+      motor_arm_box_PID.setReference(-11, ControlType.kPosition);
+      motor_elevator_PID.setReference(-5.6, ControlType.kPosition);
     }
     
-    if(PLANBout)
+    if (Feeder_Station)
     {
-      doublesolenoid2.set(DoubleSolenoid.Value.kForward);
+      motor_elevator_PID.setReference(134.36, ControlType.kPosition);
+      motor_arm_box_PID.setReference(-1.2, ControlType.kPosition);
     }
+      /*
+      if(PLANBHout)
+      {
+        doublesolenoid1.set(DoubleSolenoid.Value.kForward);
+      }
+      
+      if(PLANBHin)
+      {
+        doublesolenoid1.set(DoubleSolenoid.Value.kReverse);
+      }
+  
+      if(PLANBout)
+      {
+        doublesolenoid2.set(DoubleSolenoid.Value.kForward);
+      }
+  
+      if(PLANBin)
+      {
+        doublesolenoid2.set(DoubleSolenoid.Value.kReverse);
+      }
+      */
+      /*
+      if(Stepperout)
+      {
+        doublesolenoid0.set(DoubleSolenoid.Value.kForward);
+      }
+  
+      if(Stepperin)
+      {
+        doublesolenoid0.set(DoubleSolenoid.Value.kReverse);
+      }
+      */
+      if(IntakeRgo)
+      {
+        motor_intake.set(ControlMode.PercentOutput, 0.75);
+      }
 
-    if(PLANBin)
+      if(IntakeRstop)
+      {
+        motor_intake.set(ControlMode.PercentOutput, 0);
+      }
+
+      if(IntakeLgo)
+      {
+        motor_intake.set(ControlMode.PercentOutput, -1);
+      }
+    
+      if(IntakeLstop)
+      {
+        motor_intake.set(ControlMode.PercentOutput, 0);
+      }  
+    
+  
+    if(Rocket_level_2)
     {
-      doublesolenoid2.set(DoubleSolenoid.Value.kReverse);
+      motor_elevator_PID.setReference(232.36, ControlType.kPosition);
+      motor_arm_box_PID.setReference(-0.75, ControlType.kPosition);
+      // motor_elevator.set(0.5);
     }
-
-    if(Stepperout)
-    {
-      doublesolenoid0.set(DoubleSolenoid.Value.kForward);
-    }
-
-    if(Stepperin)
-    {
-      doublesolenoid0.set(DoubleSolenoid.Value.kReverse);
-    }
-
-    if(IntakeRgo)
-    {
-      motor_intake.set(ControlMode.PercentOutput, 1);
-    }
-
-    if(IntakeRstop)
-    {
-      motor_intake.set(ControlMode.PercentOutput, 0);
-    }
-
-    if(IntakeLgo)
-    {
-      motor_intake.set(ControlMode.PercentOutput, -1);
-    }
-
-    if(IntakeLstop)
-    {
-      motor_intake.set(ControlMode.PercentOutput, 0);
-    }
-
-    if(Eup)
-    {
-      motor_elevator.set(0.88);
-    }
-
+    /*
     if(Eustop)
     {
-      motor_elevator.set(0);
+       motor_elevator.set(0);
     }
-
-    if(Edown)
+    */
+    if(Cargo_ship)
     {
-      motor_elevator.set(-0.88);
+      motor_elevator_PID.setReference(202.36, ControlType.kPosition);
+      motor_arm_box_PID.setReference(-5, ControlType.kPosition);
+      // motor_elevator.set(-0.5);
     }
-
+    /*
     if(Edstop)
     {
       motor_elevator.set(0);
     }
-
-    if(BoxAup)
+    */
+    if(Starting_config)
     {
-      motor_arm_box.set(0.05);
+      motor_arm_box_PID.setReference(-0.75, ControlType.kPosition);
+      motor_elevator_PID.setReference(0, ControlType.kPosition);
+      Motor5PID.setReference(0, ControlType.kPosition);
+      //suction_cup_lift_PID.setReference(0, ControlType.kPosition);
+      // motor_arm_box.set(0.1);
     }
-
+    /*
     if(BoxAustop)
     {
       motor_arm_box.set(0);
     }
-
-    if(BoxAdown)
+    */
+    if(Ball_intake_arm)
     {
-      motor_arm_box.set(-0.05);
+      motor_arm_box_PID.setReference(-13.5, ControlType.kPosition);
+      motor_elevator_PID.setReference(-5.6, ControlType.kPosition);
+      // motor_arm_box.set(-0.1);
     }
-
+    /*
     if(BoxAdstop)
     {
       motor_arm_box.set(0);
-    }
-
+    }  
+    */
         // Put default auto code here
         break;
         
@@ -373,22 +412,22 @@ public class Robot extends IterativeRobot {
    * This function is called periodically during operator control.
    */
   @Override
-  public void teleopPeriodic() {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+  public void teleopPeriodic() {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
     //System.out.println(encoder_lift.getPosition());
-    System.out.println(encoder_elevator.getPosition());
+    System.out.println(encoder_arm_box.getPosition());
+
+    Suction_cup_timer.start();
 
     boolean Eustop = stick2.getRawButtonReleased(5);
     boolean Edstop = stick2.getRawButtonReleased(1);
-    boolean Eup = stick2.getRawButtonPressed(5);
-    boolean Edown = stick2.getRawButtonPressed(1);
+    boolean Rocket_level_2 = stick2.getRawButtonPressed(5);
+    boolean Cargo_ship = stick2.getRawButtonPressed(1);
 
-    boolean BoxAdown = stick2.getRawButtonPressed(3);
-    boolean BoxAup = stick2.getRawButtonPressed(7);
+    boolean Ball_intake_arm = stick2.getRawButtonPressed(3);
+    boolean Starting_config = stick2.getRawButtonPressed(7);
     boolean BoxAustop = stick2.getRawButtonReleased(7);
     boolean BoxAdstop = stick2.getRawButtonReleased(3);
 
-    boolean Hatchout = Rattack.getRawButtonPressed(2);
-    boolean Hatchin = Rattack.getRawButtonReleased(2);
     boolean Stepperout = Rattack.getRawButton(5);
     boolean Stepperin = Lattack.getRawButton(4);
     boolean PLANBout = Rattack.getRawButtonPressed(3);
@@ -396,18 +435,29 @@ public class Robot extends IterativeRobot {
     boolean PLANBHout = Lattack.getRawButtonPressed(3);
     boolean PLANBHin = Lattack.getRawButtonReleased(3);
 
+    boolean Suction_cup_forward = stick2.getRawButton(4);
+    boolean Suction_cup_backward = stick2.getRawButton(8);
+    boolean Stabilizer_button = Rattack.getRawButton(8);
+    boolean Stabilizer_button_in = Rattack.getRawButton(9);
+
     boolean IntakeRgo = Rattack.getRawButtonPressed(1);
     boolean IntakeRstop = Rattack.getRawButtonReleased(1);
     boolean IntakeLgo = Lattack.getRawButtonPressed(1);
     boolean IntakeLstop = Lattack.getRawButtonReleased(1);
 
-    boolean Elevator_test_up = stick2.getRawButton(2);
-    boolean Elevator_test_down = stick2.getRawButton(6);
+    boolean Ball_capture = stick2.getRawButton(2);
+    boolean Feeder_Station = stick2.getRawButton(6);
+
+    boolean Suction_cup_liftup = Lattack.getRawButtonPressed(8);
+    boolean Suction_cup_liftupstop = Lattack.getRawButtonReleased(8);
+    boolean Suction_cup_liftdown = Lattack.getRawButtonPressed(9);
+    boolean Suction_cup_liftdownstop = Lattack.getRawButtonReleased(9);
 
     boolean P4 = stick2.getRawButton(4);
     boolean P8 = stick2.getRawButton(8);
     boolean P4stop = stick2.getRawButtonReleased(4);
     boolean P8stop = stick2.getRawButtonReleased(8);
+    // boolean Lift_18 = Lattack.getRawButton(6);
     
     
     if(Lattack.getRawAxis(1) > 0.1 || Lattack.getRawAxis(1) < -0.1) 
@@ -436,49 +486,62 @@ public class Robot extends IterativeRobot {
     
     if(P4)
     {
-       Motor5PID.setReference(-102, ControlType.kPosition);
+      // Motor5PID.setReference(-102, ControlType.kPosition); //For 6"
+      // Motor5PID.setReference(-295, ControlType.kPosition); //For 18"
       // Uncomment the following code so you can manually 
       // lower the lift.
-      // motor_lift.set(-0.2);//Lift Turn down at a speed of -0.1.
+      motor_lift.set(-0.4);//Lift Turn down at a speed of -0.1.
     }
+
+    if(P4stop)
+    {
+      motor_lift.set(0);
+    }
+
 
     if(P8)
     {
-       Motor5PID.setReference(0, ControlType.kPosition);
+      // Motor5PID.setReference(-25, ControlType.kPosition);
       // Uncomment the following code so you can manually 
       // raise the lift.
-      // motor_lift.set(0.2);// Lift Turn up at a speed of 0.1.
+      motor_lift.set(0.4);// Lift Turn up at a speed of 0.1.
     }
+
+    if(P8stop)
+    {
+      motor_lift.set(0);
+    }
+
     /*
-    if(P4stop){
-      motor_lift.set(0);
-    }
-    if(P8stop){
-      motor_lift.set(0);
+    if(Lift_18)
+    {
+      Motor5PID.setReference(-295, ControlType.kPosition); //For 18"
     }
     */
-    if (Elevator_test_up)
+    
+    if(Stepperout)
     {
-      motor_elevator_PID.setReference(0, ControlType.kPosition);
-      motor_arm_box_PID.setReference(-12.5, ControlType.kPosition);
+      doublesolenoid0.set(DoubleSolenoid.Value.kForward);
+    }
+
+    if(Stepperin)
+    {
+      doublesolenoid0.set(DoubleSolenoid.Value.kReverse);
     }
     
-    if (Elevator_test_down)
+    if (Ball_capture)
     {
-      motor_elevator_PID.setReference(350, ControlType.kPosition);
-      motor_arm_box_PID.setReference(-3.2, ControlType.kPosition);
+      motor_arm_box_PID.setReference(-11, ControlType.kPosition);
+      motor_elevator_PID.setReference(-5.6, ControlType.kPosition);
+    }
+    
+    if (Feeder_Station)
+    {
+      motor_elevator_PID.setReference(134.36, ControlType.kPosition);
+      motor_arm_box_PID.setReference(-1.2, ControlType.kPosition);
     }
 
-    if(Hatchout)
-    {
-      solenoid1.set(true);
-    }
-   
-    if(Hatchin)
-    {
-      solenoid1.set(false);
-    }
-
+    /*
     if(PLANBHout)
     {
       doublesolenoid1.set(DoubleSolenoid.Value.kForward);
@@ -498,20 +561,11 @@ public class Robot extends IterativeRobot {
     {
       doublesolenoid2.set(DoubleSolenoid.Value.kReverse);
     }
-
-    if(Stepperout)
-    {
-      doublesolenoid0.set(DoubleSolenoid.Value.kForward);
-    }
-
-    if(Stepperin)
-    {
-      doublesolenoid0.set(DoubleSolenoid.Value.kReverse);
-    }
+    */
 
     if(IntakeRgo)
     {
-      motor_intake.set(ControlMode.PercentOutput, 1);
+      motor_intake.set(ControlMode.PercentOutput, 0.75);
     }
 
     if(IntakeRstop)
@@ -528,53 +582,108 @@ public class Robot extends IterativeRobot {
     {
       motor_intake.set(ControlMode.PercentOutput, 0);
     }
-
-    if(Eup)
+    /*
+    if(Suction_cup_liftup)
     {
-      motor_elevator_PID.setReference(595, ControlType.kPosition);
-      motor_arm_box_PID.setReference(-0.75, ControlType.kPosition);
-      //motor_elevator.set(0.88);
+     // suction_cup_lift_PID.setReference(-22.5, ControlType.kPosition);
+     motor_suction_lift.set(1.7);
     }
-/*
+    
+    if(Suction_cup_liftupstop)
+    {
+      motor_suction_lift.set(0);
+    }
+    
+    if(Suction_cup_liftdown)
+    {
+      // suction_cup_lift_PID.setReference(5.3, ControlType.kPosition);
+      motor_suction_lift.set(-1.7);
+    }
+    
+    if(Suction_cup_liftdownstop)
+    {
+      motor_suction_lift.set(0);
+    }
+    */
+  
+    if(Rocket_level_2)
+    {
+      motor_elevator_PID.setReference(232.36, ControlType.kPosition);
+      motor_arm_box_PID.setReference(-0.75, ControlType.kPosition);
+      // motor_elevator.set(0.5);
+    }
+    /*
     if(Eustop)
     {
-      motor_elevator.set(0);
+       motor_elevator.set(0);
     }
-*/
-    if(Edown)
+    */
+    if(Cargo_ship)
     {
-      motor_elevator_PID.setReference(520, ControlType.kPosition);
-      motor_arm_box_PID.setReference(-4.2, ControlType.kPosition);
+      motor_elevator_PID.setReference(202.36, ControlType.kPosition);
+      motor_arm_box_PID.setReference(-5, ControlType.kPosition);
+      // motor_elevator.set(-0.5);
     }
-/*
+    /*
     if(Edstop)
     {
       motor_elevator.set(0);
     }
-*/
-    if(BoxAup)
+    */
+    if(Starting_config)
     {
       motor_arm_box_PID.setReference(-0.75, ControlType.kPosition);
       motor_elevator_PID.setReference(0, ControlType.kPosition);
-      //motor_arm_box.set(0.1);
+      // Motor5PID.setReference(0, ControlType.kPosition);
+      // suction_cup_lift_PID.setReference(0, ControlType.kPosition);
+      // motor_arm_box.set(0.1);
     }
-/*
+    /*
     if(BoxAustop)
     {
       motor_arm_box.set(0);
     }
-*/
-    if(BoxAdown)
+    */
+    if(Ball_intake_arm)
     {
-      motor_arm_box_PID.setReference(-14, ControlType.kPosition);
-      //motor_arm_box.set(-0.1);
+      motor_arm_box_PID.setReference(-13.5, ControlType.kPosition);
+      motor_elevator_PID.setReference(-5.6, ControlType.kPosition);
+      // motor_arm_box.set(-0.1);
     }
+    /*
+    if(BoxAdstop)
+    {
+      motor_arm_box.set(0);
+    }  
+    */
+    /*
+    if(Stabilizer_button)
+    {
+      stabilizer.set(DoubleSolenoid.Value.kReverse);
+    }
+
+    if(Stabilizer_button_in)
+    {
+      stabilizer.set(DoubleSolenoid.Value.kForward);
+    }
+
+    if(Suction_cup_backward)
+    {
+      suction_cup.set(DoubleSolenoid.Value.kForward);
+    }
+
+    if(Suction_cup_forward)
+    {
+      suction_cup.set(DoubleSolenoid.Value.kReverse);
+    }
+    */
 /*
-    if(stick2.getRawAxis(1) > 0.9)
+    RobotTimer.start();
+    if(Suction_cup_button)
     {
       for (piston_repeat = 0; piston_repeat < 4; piston_repeat++)
       {
-        RobotTimer.start();
+        RobotTimer.reset();
         if (RobotTimer.get() < 0.5)
         {
           suction_cup.set(DoubleSolenoid.Value.kForward);
@@ -583,16 +692,33 @@ public class Robot extends IterativeRobot {
         {
           suction_cup.set(DoubleSolenoid.Value.kReverse);
         }
-        RobotTimer.reset();
       }
     }
+*/
 /*
-   if(BoxAdstop)
+    if(stick2.getRawAxis(1) > 0.9)
     {
-      motor_arm_box.set(0);
-    }
+      TimerTask Suction_task = new TimerTask()
+    {
+    @Override
+    public void run() 
+    {
+      Suction_cup_timer.reset();
+
+        if (Suction_cup_timer.get() < 0.25)
+        {
+          suction_cup.set(DoubleSolenoid.Value.kForward);
+        }
+
+        if (Suction_cup_timer.get() > 0.25)
+        {
+          suction_cup.set(DoubleSolenoid.Value.kReverse);
+        }   
+     }
+    };
     
-/*
+    RobotTimer.schedule(Suction_task, 2000, 2000);
+
     if(climb)
     {
       RobotTimer.start();
@@ -616,7 +742,7 @@ public class Robot extends IterativeRobot {
     }
   
 
-    if(Eup)
+    if(Rocket_level_2)
     {
       if(encoder_arm_box.getPosition() < -9){
       motor_arm_box.set(0.1);
